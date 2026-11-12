@@ -133,6 +133,13 @@ The admin can **arm** the gate from the dashboard. The next tap is then only *in
 
 - **Read:** dumps every sector that opens with the factory key and marks the protected ones.
 - **Write:** the server encrypts up to 48 bytes of text (**AES-256-CTR**) and writes it into sector 1 to 15. The sector's Key A/B is replaced by a key derived (SHA-256) from a new **decryption code** `XXXX-XXXX`. The server only stores the ciphertext and a **scrypt hash** of the code, never the code itself.
+- **Keys A and B:** each sector trailer (block 3) is `Key A (6 B) | access bits (4 B) | Key B (6 B)`. Reads authenticate with Key A (factory `FF…FF`, or the sector's derived key to unlock it). A write sets both Key A and Key B and keeps the standard access bits `FF 07 80`, so a sector can never be bricked. Sector 0 is never written.
+
+**Memory map.** The dashboard draws the scanned card as 16 sector tiles (manufacturer / data / empty / encrypted / trailer blocks, a lock on protected sectors) with the locked-sector count, and a hex view of any sector. The *Hardware* page monitors the reader itself (RC522 detected, ESP32 online, LCD, servos) from the ESP32 heartbeat.
+
+| Memory map (sample card) | Reader & hardware status |
+|:---:|:---:|
+| <img src="docs/images/screenshots/memory-map.png" alt="Memory map of a MIFARE Classic 1K card with 16 sectors, 2 locked, and the hex dump of sector 1" width="380"> | <img src="docs/images/screenshots/hardware-status.png" alt="Hardware page: ESP32 online, RC522 detected, LCD connected, sensors and barriers" width="460"> |
 
 ---
 
