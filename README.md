@@ -11,6 +11,7 @@ ESP32 + RC522 at the gate · Node.js/SQLite backend as the single source of trut
 ![Express](https://img.shields.io/badge/Express-4-000000?logo=express)
 ![SQLite](https://img.shields.io/badge/SQLite-003B57?logo=sqlite&logoColor=white)
 ![Tests](https://img.shields.io/badge/tests-21%20passing-brightgreen)
+![License](https://img.shields.io/badge/license-MIT-blue)
 
 <img src="docs/images/photos/maquette-top-view.jpg" alt="The finished parking scale model seen from above" width="760">
 
@@ -302,6 +303,12 @@ On Windows, allow Node through the firewall (private networks) so the ESP32 and 
 | <img src="docs/images/photos/sg90-servo.jpg" alt="Tower Pro SG90 micro servo" height="300"> | <img src="docs/images/photos/water-sensor-mount.jpg" alt="Water sensor on its MDF mount" height="380"> |
 
 More in [`docs/hardware/`](docs/hardware): wiring guide, plan and 3D views of the model (`maquette-plan.svg`, `maquette-3d.svg`) and the 3D-holder design brief.
+
+---
+
+## License
+
+[MIT](LICENSE) © 2026 Youssef Timoumi
 
 ---
 
