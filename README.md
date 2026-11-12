@@ -295,14 +295,11 @@ On Windows, allow Node through the firewall (private networks) so the ESP32 and 
 | Analog water / rain sensor | 1 |
 | Breadboards, jumpers, laser-cut MDF scale model | – |
 
-<p align="center">
-  <img src="docs/images/photos/build-wiring-in-progress.jpg" alt="Wiring the breadboards under the model" height="380">
-  &nbsp;
-  <img src="docs/images/photos/slot-sensors-breadboard.jpg" alt="Two HC-SR04 slot sensors on a breadboard with their voltage dividers" height="380">
-  &nbsp;
-  <img src="docs/images/photos/water-sensor-mount.jpg" alt="Water sensor on its MDF mount" height="380">
-</p>
-<p align="center"><em>Left: routing the ESP32 and breadboards under the board. Middle: the two HC-SR04 slot sensors with their 1k/2k echo dividers, next to the exit barrier. Right: the rain sensor on its MDF mount.</em></p>
+| Wiring under the board | HC-SR04 slot sensors + echo dividers |
+|:---:|:---:|
+| <img src="docs/images/photos/build-wiring-in-progress.jpg" alt="Wiring the ESP32 and breadboards under the model" height="380"> | <img src="docs/images/photos/slot-sensors-breadboard.jpg" alt="Two HC-SR04 slot sensors on a breadboard with their voltage dividers" height="380"> |
+| **SG90 barrier servo** | **Rain sensor on its MDF mount** |
+| <img src="docs/images/photos/sg90-servo.jpg" alt="Tower Pro SG90 micro servo" height="300"> | <img src="docs/images/photos/water-sensor-mount.jpg" alt="Water sensor on its MDF mount" height="380"> |
 
 More in [`docs/hardware/`](docs/hardware): wiring guide, plan and 3D views of the model (`maquette-plan.svg`, `maquette-3d.svg`) and the 3D-holder design brief.
 
