@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f4f7f5">
+    <title>Wi-Fi SmartParking</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="qr.js" defer></script>
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="topbar">
+        <a class="brand" href="/" aria-label="Retour à Smart Parking">
+          <span class="brand-mark" aria-hidden="true">P</span>
+          <span>smart<span class="brand-light">parking</span></span>
+        </a>
+        <span class="connection">Wi-Fi du parking</span>
+      </header>
+      <div class="page-wrap">
+        <section class="page page-active" aria-labelledby="wifi-title">
+          <p class="eyebrow">CONNEXION SANS FIL</p>
+          <h1 id="wifi-title">Rejoindre le parking</h1>
+          <p class="intro">Scannez les deux QR codes dans l’ordre pour vous connecter.</p>
+          <div class="card qr-card">
+            <h2>1. Rejoindre le Wi-Fi</h2>
+            <canvas id="wifi-qr" class="qr-canvas" role="img" aria-label="QR code pour rejoindre le réseau Wi-Fi"></canvas>
+            <strong class="wifi-name" id="wifi-name">ff15</strong>
+            <p class="qr-help">Réseau Wi-Fi sécurisé. Scannez ensuite le second QR code.</p>
+          </div>
+          <div class="card qr-card">
+            <h2>2. Ouvrir l'application</h2>
+            <canvas id="app-qr" class="qr-canvas" role="img" aria-label="QR code de l'application Smart Parking"></canvas>
+            <strong id="application-url" class="wifi-name"></strong>
+          </div>
+          <p class="message error-message" id="qr-error" role="alert" hidden></p>
+        </section>
+      </div>
+      <footer class="app-footer"><a href="/">← Retour au parking</a></footer>
+    </main>
+  </body>
+</html>

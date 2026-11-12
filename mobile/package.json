@@ -1,0 +1,11 @@
+{
+  "name": "smart-parking",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Interface mobile de démonstration pour parking intelligent",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node test-integration.js"
+  }
+}

@@ -1,0 +1,648 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#111317">
+    <title>Smart Parking</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="app.js" defer></script>
+  </head>
+  <body>
+  <!-- SPLASH D'OUVERTURE -->
+  <div id="splash" class="splash-overlay hidden" role="dialog" aria-label="Bienvenue">
+    <div class="splash-content">
+      <svg class="splash-logo" viewBox="0 0 40 40" aria-hidden="true">
+        <rect width="40" height="40" rx="13" fill="currentColor"/>
+        <path d="M13 31V9h8.3c6.1 0 9.7 3 9.7 8s-3.6 8-9.7 8H18v6h-5Zm5-10h3.1c3.2 0 4.8-1.3 4.8-4s-1.6-4-4.8-4H18v8Z" fill="#fff"/>
+      </svg>
+      <div class="splash-car">
+        <svg class="hero-car" viewBox="0 0 100 150" aria-hidden="true">
+          <rect x="23" y="9" width="54" height="132" rx="22" fill="#f5f4ee"/>
+          <path d="M30 39q2-17 12-20h16q10 3 12 20l4 20v48l-4 20q-2 14-12 16H42q-10-2-12-16l-4-20V59z" fill="#ffc94c"/>
+          <path d="M33 49q3-17 10-19h14q7 2 10 19v19H33zm0 39h34v17q-2 12-10 14H43q-8-2-10-14z" fill="#28313b"/>
+          <path d="M37 73h26v8H37z" fill="#dcae3e"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+    <main class="app-shell">
+      <header class="topbar">
+        <a class="brand" href="#" data-page-link="home" aria-label="Smart Parking — accueil">
+          <svg class="brand-mark" viewBox="0 0 40 40" role="img" aria-label="Logo P">
+            <rect width="40" height="40" rx="13" fill="currentColor"/>
+            <path d="M13 31V9h8.3c6.1 0 9.7 3 9.7 8s-3.6 8-9.7 8H18v6h-5Zm5-10h3.1c3.2 0 4.8-1.3 4.8-4s-1.6-4-4.8-4H18v8Z" fill="#fff"/>
+          </svg>
+          <span>smart<span class="brand-light">parking</span></span>
+        </a>
+        <div class="top-actions">
+          <span class="connection"><span class="connection-dot"></span><span data-i18n="connected">Parking connecté</span></span>
+          <div class="language-switch" aria-label="Language">
+            <button type="button" class="lang-button is-active" data-lang="fr">FR</button>
+            <button type="button" class="lang-button" data-lang="en">EN</button>
+          </div>
+        </div>
+      </header>
+      <p class="connection-alert" id="connection-alert" role="status" hidden>ESP32 injoignable</p>
+
+      <div class="page-wrap">
+        <section class="page page-active" id="page-home" aria-labelledby="home-title">
+          <div class="rain-alert-banner card" id="home-rain-banner" hidden>
+            <span class="rain-banner-icon" aria-hidden="true">🌧️</span>
+            <span class="rain-banner-text" id="home-rain-banner-text" data-i18n="rainBannerText">Pluie : seule la place couverte est ouverte</span>
+          </div>
+          <div class="welcome-banner">
+            <div class="hero-copy">
+              <span class="eyebrow" data-i18n="homeEyebrow">PARKING INTELLIGENT</span>
+              <h1 id="home-title" data-i18n="homeTitle">Trouvez votre place</h1>
+              <p class="intro" data-i18n="homeIntro">Un stationnement fluide, sécurisé et sans attente.</p>
+            </div>
+            <svg class="hero-car" viewBox="0 0 100 150" aria-hidden="true">
+              <rect x="23" y="9" width="54" height="132" rx="22" fill="#f5f4ee"/>
+              <path d="M30 39q2-17 12-20h16q10 3 12 20l4 20v48l-4 20q-2 14-12 16H42q-10-2-12-16l-4-20V59z" fill="#ffc94c"/>
+              <path d="M33 49q3-17 10-19h14q7 2 10 19v19H33zm0 39h34v17q-2 12-10 14H43q-8-2-10-14z" fill="#28313b"/>
+              <path d="M37 73h26v8H37z" fill="#dcae3e"/>
+              <rect x="18" y="45" width="7" height="23" rx="3" fill="#15191e"/><rect x="75" y="45" width="7" height="23" rx="3" fill="#15191e"/>
+              <rect x="18" y="101" width="7" height="23" rx="3" fill="#15191e"/><rect x="75" y="101" width="7" height="23" rx="3" fill="#15191e"/>
+              <path d="M31 42h7m24 0h7M31 119h7m24 0h7" stroke="#fff4cf" stroke-width="4" stroke-linecap="round"/>
+            </svg>
+          </div>
+
+          <section class="section-block parking-status-section" id="section-etat" aria-labelledby="live-title">
+            <div class="section-heading">
+              <div>
+                <span class="eyebrow" data-i18n="liveEyebrow">EN TEMPS RÉEL</span>
+                <div class="heading-with-badge">
+                  <h2 id="live-title" data-i18n="parkingState">État du parking</h2>
+                  <span class="live-iot-badge"><span class="live-iot-dot"></span>Live IoT</span>
+                </div>
+              </div>
+              <span class="live-pill"><span></span><span data-i18n="live">En direct</span></span>
+            </div>
+
+            <!-- Schéma interactif SVG -->
+            <div class="parking-plan card" id="home-plan">
+              <!-- Pastilles d'état en direct -->
+              <div class="plan-badges">
+                <span class="plan-badge" id="badge-map-status">
+                  <span class="plan-badge-dot plan-badge-dot--yellow"></span>
+                  <span id="badge-map-text">En attente des capteurs</span>
+                </span>
+                <span class="plan-badge" id="badge-barrier">
+                  <span class="plan-badge-dot plan-badge-dot--red"></span>
+                  <span id="badge-barrier-text">Barrière : Fermée</span>
+                </span>
+                <span class="plan-badge" id="badge-rain">
+                  <span class="plan-badge-icon" id="badge-rain-icon">☀️</span>
+                  <span id="badge-rain-text">Temps sec</span>
+                </span>
+              </div>
+
+              <!-- Schéma SVG PARKING EN DIRECT -->
+              <svg class="parking-map parking-map--live" viewBox="0 0 360 290" role="img" aria-labelledby="home-plan-title home-plan-desc">
+                <title id="home-plan-title" data-i18n="planTitle">Plan du parking</title>
+                <desc id="home-plan-desc" data-i18n="planDescription">Vue de dessus des deux places de stationnement, la première couverte.</desc>
+                <defs>
+                  <pattern id="hatch-roof" width="8" height="8" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
+                    <line x1="0" y1="0" x2="0" y2="8" stroke="rgba(56,189,248,0.22)" stroke-width="2"/>
+                  </pattern>
+                  <pattern id="rain-drop" width="18" height="24" patternUnits="userSpaceOnUse">
+                    <circle cx="4" cy="6" r="1.2" fill="#60a5fa" opacity="0.7">
+                      <animate attributeName="cy" values="0;24" dur="0.8s" repeatCount="indefinite"/>
+                      <animate attributeName="opacity" values="0.8;0" dur="0.8s" repeatCount="indefinite"/>
+                    </circle>
+                    <circle cx="13" cy="16" r="1" fill="#60a5fa" opacity="0.5">
+                      <animate attributeName="cy" values="0;24" dur="1.1s" repeatCount="indefinite"/>
+                      <animate attributeName="opacity" values="0.6;0" dur="1.1s" repeatCount="indefinite"/>
+                    </circle>
+                  </pattern>
+                </defs>
+
+                <!-- Fond du parking -->
+                <rect class="lot-background" x="5" y="5" width="350" height="280" rx="16"/>
+                <text class="plan-title-text" x="180" y="24" text-anchor="middle" fill="#6b7280" font-size="7" font-weight="800" letter-spacing="2">PLAN DU PARKING</text>
+
+                <!-- Place 1 : COUVERTE (haut gauche) -->
+                <g class="parking-spot" data-place="Place 1" data-state="free">
+                  <rect x="14" y="32" width="162" height="130" rx="12" fill="url(#hatch-roof)" stroke="#38bdf8" stroke-width="2" stroke-dasharray="6 4" opacity="0.55"/>
+                  <text class="spot-environment-label" x="95" y="46" text-anchor="middle" fill="#7dd3fc" font-size="7" font-weight="800" letter-spacing="0.6">COUVERTE</text>
+                  <rect class="bay-fill" x="22" y="52" width="146" height="102" rx="11"/>
+                  <text class="bay-number" x="95" y="105" text-anchor="middle" fill="rgba(255,255,255,0.08)" font-size="48" font-weight="900">1</text>
+
+                  <!-- Boîtier capteur HC-SR04 (2 transducteurs / yeux) -->
+                  <g class="sensor-box" transform="translate(68,34)">
+                    <rect x="0" y="0" width="54" height="14" rx="4" fill="#0c4a6e" stroke="#38bdf8" stroke-width="0.8"/>
+                    <circle class="sensor-led" id="led-p1-l" cx="14" cy="7" r="4" fill="#56d79b"/>
+                    <circle class="sensor-led" id="led-p1-r" cx="40" cy="7" r="4" fill="#56d79b"/>
+                    <text x="27" y="22" text-anchor="middle" fill="#7dd3fc" font-size="5.5" font-weight="700">HC-SR04</text>
+                  </g>
+
+                  <!-- Voiture vue de dessus -->
+                  <g class="car" aria-hidden="true">
+                    <rect class="car-shadow" x="55" y="66" width="50" height="78" rx="15"/>
+                    <path class="car-body" d="M64 76q3-9 10-11h13q7 2 10 11l3 12v38l-3 11q-3 8-10 10H74q-7-2-10-10l-3-11V88z"/>
+                    <path class="car-window" d="M67 83q3-11 8-12h11q5 1 8 12v13H67zm0 20h27v17H67z"/>
+                    <path class="car-detail" d="M68 99h25m-26 30h7m14 0h7"/>
+                  </g>
+                  <text class="bay-label" x="95" y="147" data-i18n="placeOne">Place 1</text>
+                  <text class="bay-state" x="95" y="159" data-i18n="free">Libre</text>
+                </g>
+
+                <!-- Place 2 : DÉCOUVERTE (haut droite) -->
+                <g class="parking-spot" data-place="Place 2" data-state="free">
+                  <rect x="184" y="32" width="162" height="130" rx="12" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1.5" stroke-dasharray="4 5"/>
+                  <text class="spot-environment-label" x="265" y="46" text-anchor="middle" fill="#a4abb6" font-size="7" font-weight="800" letter-spacing="0.6">EXTÉRIEURE</text>
+                  <rect class="bay-fill" x="192" y="52" width="146" height="102" rx="11"/>
+                  <text class="bay-number" x="265" y="105" text-anchor="middle" fill="rgba(255,255,255,0.08)" font-size="48" font-weight="900">2</text>
+
+                  <!-- Boîtier capteur HC-SR04 (1 rond + 1 LED) -->
+                  <g class="sensor-box" transform="translate(238,34)">
+                    <rect x="0" y="0" width="54" height="14" rx="4" fill="#1e293b" stroke="#64748b" stroke-width="0.8"/>
+                    <circle cx="18" cy="7" r="4" fill="#334155" stroke="#94a3b8" stroke-width="0.8"/>
+                    <circle class="sensor-led" id="led-p2" cx="38" cy="7" r="4" fill="#56d79b"/>
+                    <text x="27" y="22" text-anchor="middle" fill="#94a3b8" font-size="5.5" font-weight="700">HC-SR04</text>
+                  </g>
+
+                  <!-- Gouttes de pluie sur Place 2 -->
+                  <rect class="rain-overlay" id="rain-overlay-p2" x="192" y="52" width="146" height="102" rx="11" fill="url(#rain-drop)" style="display:none"/>
+
+                  <!-- Voiture vue de dessus -->
+                  <g class="car" aria-hidden="true">
+                    <rect class="car-shadow" x="225" y="66" width="50" height="78" rx="15"/>
+                    <path class="car-body" d="M234 76q3-9 10-11h13q7 2 10 11l3 12v38l-3 11q-3 8-10 10h-13q-7-2-10-10l-3-11V88z"/>
+                    <path class="car-window" d="M237 83q3-11 8-12h11q5 1 8 12v13h-27zm0 20h27v17h-27z"/>
+                    <path class="car-detail" d="M238 99h25m-26 30h7m14 0h7"/>
+                  </g>
+                  <text class="bay-label" x="265" y="147" data-i18n="placeTwo">Place 2</text>
+                  <text class="bay-state" x="265" y="159" data-i18n="free">Libre</text>
+                </g>
+
+                <!-- Voie d'accès / Entrée -->
+                <rect x="14" y="200" width="332" height="36" rx="8" fill="#0f1318"/>
+                <line x1="30" y1="218" x2="330" y2="218" stroke="rgba(255,255,255,0.12)" stroke-width="1.5" stroke-dasharray="10 8"/>
+                <polygon points="310,212 322,218 310,224" fill="#6b7280" opacity="0.6"/>
+                <text x="180" y="248" text-anchor="middle" fill="#6b7280" font-size="7" font-weight="800" letter-spacing="1.5">ENTRÉE</text>
+
+                <!-- Lecteur RFID RC522 -->
+                <g transform="translate(22,190)">
+                  <rect x="0" y="0" width="36" height="44" rx="6" fill="#1f2530" stroke="#485363" stroke-width="1"/>
+                  <rect x="5" y="6" width="26" height="18" rx="3" fill="#13171e" stroke="#2c3442" stroke-width="0.7"/>
+                  <path d="M14 11q4.5-3 8 0" fill="none" stroke="#ffc94c" stroke-width="1.2" stroke-linecap="round"/>
+                  <path d="M12 14q6.5-4 12 0" fill="none" stroke="#ffc94c" stroke-width="1" stroke-linecap="round" opacity="0.7"/>
+                  <path d="M10 17q8.5-5 16 0" fill="none" stroke="#ffc94c" stroke-width="0.8" stroke-linecap="round" opacity="0.4"/>
+                  <circle id="led-rc522" cx="18" cy="33" r="3" fill="#56d79b"/>
+                  <text x="18" y="51" text-anchor="middle" fill="#a4abb6" font-size="6" font-weight="700">RC522</text>
+                </g>
+
+                <!-- Servomoteur SG90 et barrière pivotante -->
+                <g transform="translate(76,192)">
+                  <rect x="0" y="0" width="30" height="36" rx="5" fill="#183654" stroke="#2a5885" stroke-width="1"/>
+                  <circle cx="15" cy="10" r="4" fill="#0d1f30" stroke="#427aa1" stroke-width="0.7"/>
+                  <text x="15" y="28" text-anchor="middle" fill="#7ab2df" font-size="5.5" font-weight="800">SG90</text>
+                  <circle id="led-barrier" cx="15" cy="10" r="2.5" fill="#ef4444"/>
+                  <g id="barrier-arm-group" style="transform-origin:15px 10px;transition:transform 0.6s ease">
+                    <line id="barrier-arm" x1="15" y1="10" x2="70" y2="10" stroke="#ef4444" stroke-width="3.5" stroke-linecap="round" stroke-dasharray="6 4"/>
+                    <circle cx="15" cy="10" r="3" fill="#ffc94c"/>
+                  </g>
+                </g>
+              </svg>
+
+              <!-- Légende standard -->
+              <div class="plan-legend" aria-label="Légende">
+                <span><i class="legend-dot legend-free"></i><span data-i18n="free">Libre</span></span>
+                <span><i class="legend-dot legend-occupied"></i><span data-i18n="occupied">Occupée</span></span>
+                <span><i class="legend-dot legend-yours"></i><span data-i18n="yours">Ma place</span></span>
+              </div>
+            </div>
+
+            <!-- Cartes de places individuelles avec télémétrie HC-SR04 et bordures glow -->
+            <div class="spot-cards-grid" id="spot-cards-container">
+              <!-- Carte Place 1 -->
+              <article class="spot-card card" id="card-place-1" data-spot="Place 1" data-state="free">
+                <div class="spot-card-inner">
+                  <div class="spot-card-left">
+                    <div class="spot-header-row">
+                      <span class="spot-type-tag shelter-tag" data-i18n="covered">Couverte</span>
+                      <h3 class="spot-card-title" data-i18n="placeOne">Place 1</h3>
+                    </div>
+                    <div class="spot-telemetry-row">
+                      <span class="sonar-signal-icon" aria-hidden="true">
+                        <i></i><i></i><i></i>
+                      </span>
+                      <span class="spot-telemetry-text" id="p1-telemetry-text">HC-SR04 : Libre</span>
+                    </div>
+                  </div>
+                  <span class="spot-badge" id="p1-badge">Libre</span>
+                </div>
+              </article>
+
+              <!-- Carte Place 2 -->
+              <article class="spot-card card" id="card-place-2" data-spot="Place 2" data-state="free">
+                <div class="spot-card-inner">
+                  <div class="spot-card-left">
+                    <div class="spot-header-row">
+                      <span class="spot-type-tag openair-tag" data-i18n="openAir">Extérieure</span>
+                      <h3 class="spot-card-title" data-i18n="placeTwo">Place 2</h3>
+                    </div>
+                    <div class="spot-telemetry-row">
+                      <span class="sonar-signal-icon" aria-hidden="true">
+                        <i></i><i></i><i></i>
+                      </span>
+                      <span class="spot-telemetry-text" id="p2-telemetry-text">HC-SR04 : Libre</span>
+                    </div>
+                  </div>
+                  <span class="spot-badge" id="p2-badge">Libre</span>
+                </div>
+              </article>
+            </div>
+
+            <!-- Widgets de synthèse et Météo Environnement -->
+            <div class="home-tiles">
+              <!-- Tuile Places disponibles -->
+              <div class="home-tile tile-metric">
+                <span class="tile-header-label" data-i18n="availableSpaces">Places disponibles</span>
+                <strong class="tile-number"><span id="home-free-count">—</span><small>/ 2</small></strong>
+                <span class="tile-footer-note">Capteurs ultrasons</span>
+              </div>
+
+              <!-- Tuile Météo / Environnement -->
+              <div class="home-tile tile-weather" id="home-weather-tile">
+                <div class="tile-weather-top">
+                  <span class="tile-header-label" data-i18n="rain">Environnement</span>
+                  <span class="tile-weather-icon" id="home-weather-icon">☀️</span>
+                </div>
+                <strong class="tile-number weather-main-text" id="home-rain">Temps sec</strong>
+                <span class="tile-footer-note" id="home-rain-sub">Conditions : Temps sec / Opérationnel</span>
+              </div>
+            </div>
+
+            <!-- Bloc Tarifs avec deux lignes et badge -X% calculé -->
+            <div class="home-rates-block card" id="home-rates-block">
+              <div class="rates-block-header">
+                <span class="rates-block-title" data-i18n="ratesBlockTitle">Tarifs</span>
+                <span class="rates-discount-badge" id="rates-discount-badge" hidden>
+                  <span id="rates-discount-value"></span> <span data-i18n="withAppLabel">avec l'application</span>
+                </span>
+              </div>
+              <div class="rates-block-rows">
+                <div class="rates-row">
+                  <span class="rates-role" data-i18n="ratePlanned">App · durée choisie</span>
+                  <strong class="rates-price"><span data-tarif="planifie">—</span> <small data-i18n="perHour">DT / h</small></strong>
+                </div>
+                <div class="rates-row">
+                  <span class="rates-role" data-i18n="rateFree">App · temps libre</span>
+                  <strong class="rates-price"><span data-tarif="libre">—</span> <small data-i18n="perHour">DT / h</small></strong>
+                </div>
+                <div class="rates-row">
+                  <span class="rates-role" data-i18n="rateNoApp">Sans application</span>
+                  <strong class="rates-price"><span data-tarif="sansApp">—</span> <small data-tarif="sansAppBloc">DT / 30 min</small></strong>
+                </div>
+              </div>
+              <p class="rates-demo-note" data-tarif="demo" hidden></p>
+            </div>
+            <button class="button button-primary button-full sticky-cta" id="have-code" type="button" data-i18n="haveCode">J'ai mon code →</button>
+          </section>
+
+          <section class="section-block how-preview">
+            <div class="section-heading"><div><span class="eyebrow" data-i18n="simple">SIMPLE & RAPIDE</span><h2 data-i18n="howTitle">Comment ça marche</h2></div></div>
+            <button class="text-link" type="button" data-page-link="help"><span data-i18n="seeSteps">Voir les étapes</span></button>
+          </section>
+        </section>
+
+        <section class="page" id="page-help" aria-labelledby="help-title" hidden>
+          <span class="eyebrow" data-i18n="guideEyebrow">VOTRE PARCOURS</span>
+          <h1 id="help-title" data-i18n="howTitle">Comment ça marche</h1>
+          <p class="intro" data-i18n="guideIntro">Quatre étapes pour stationner sereinement.</p>
+          <div class="steps-list" id="steps-list">
+            <article class="card step-card" id="step-1" data-step="active">
+              <div class="step-indicator">
+                <span class="step-number">01</span>
+                <span class="step-check" aria-hidden="true">✓</span>
+              </div>
+              <span class="step-icon" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M8 5h16v22H8zM12 10h8M12 15h8M12 20h5"/></svg></span>
+              <div><h2 data-i18n="step1Title">Présentez votre carte</h2><p data-i18n="step1Text">Approchez votre carte du lecteur à l'entrée.</p></div>
+            </article>
+            <article class="card step-card" id="step-2" data-step="pending">
+              <div class="step-indicator">
+                <span class="step-number">02</span>
+                <span class="step-check" aria-hidden="true">✓</span>
+              </div>
+              <span class="step-icon" aria-hidden="true"><svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="11"/><path d="M16 9v7l5 3"/></svg></span>
+              <div><h2 data-i18n="step2Title">Saisissez votre code</h2><p data-i18n="step2Text">Entrez le code à six chiffres affiché sur l'écran de la barrière avant la fin du compte à rebours (20 s).</p></div>
+            </article>
+            <article class="card step-card" id="step-3" data-step="pending">
+              <div class="step-indicator">
+                <span class="step-number">03</span>
+                <span class="step-check" aria-hidden="true">✓</span>
+              </div>
+              <span class="step-icon" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M5 25h22M8 25V12l8-5 8 5v13M12 25v-8h8v8"/></svg></span>
+              <div>
+                <h2 data-i18n="step3Title">Garez-vous</h2>
+                <p data-i18n="step3Text">Rejoignez la place attribuée et suivez votre solde en direct.</p>
+                <div class="step-sensor-status" id="step3-sensor-wrapper">
+                  <span class="sensor-indicator-dot" aria-hidden="true"></span>
+                  <span id="step3-sensor-msg">En attente du véhicule (capteur ultrason HC-SR04)…</span>
+                </div>
+              </div>
+            </article>
+            <article class="card step-card" id="step-4" data-step="pending">
+              <div class="step-indicator">
+                <span class="step-number">04</span>
+                <span class="step-check" aria-hidden="true">✓</span>
+              </div>
+              <span class="step-icon" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M7 16h18M18 9l7 7-7 7"/></svg></span>
+              <div><h2 data-i18n="step4Title">Terminez votre session</h2><p data-i18n="step4Text">Repassez votre carte à la sortie : la barrière s'ouvre et votre reçu s'affiche ici.</p></div>
+            </article>
+          </div>
+          <button class="button button-secondary button-full" type="button" data-page-link="rates" data-i18n="viewRules">Consulter les tarifs et règles</button>
+        </section>
+
+        <section class="page" id="page-rates" aria-labelledby="rates-title" hidden>
+          <span class="eyebrow" data-i18n="clearRules">SIMPLE ET TRANSPARENT</span>
+          <h1 id="rates-title" data-i18n="ratesTitle">Tarifs et règles</h1>
+          <p class="intro" data-i18n="ratesIntro">Les informations utiles avant de prendre la route.</p>
+          <div class="home-rates-block card">
+            <div class="rates-block-rows">
+              <div class="rates-row">
+                <span class="rates-role" data-i18n="ratePlanned">App · durée choisie</span>
+                <strong class="rates-price"><span data-tarif="planifie">—</span> <small data-i18n="perHour">DT / h</small></strong>
+              </div>
+              <div class="rates-row">
+                <span class="rates-role" data-i18n="rateFree">App · temps libre</span>
+                <strong class="rates-price"><span data-tarif="libre">—</span> <small data-i18n="perHour">DT / h</small></strong>
+              </div>
+              <div class="rates-row">
+                <span class="rates-role" data-i18n="rateNoApp">Sans application</span>
+                <strong class="rates-price"><span data-tarif="sansApp">—</span> <small data-tarif="sansAppBloc">DT / 30 min</small></strong>
+              </div>
+            </div>
+            <p class="rates-explain" data-i18n="ratesExplain">Indiquez combien de temps vous restez pour payer moins. Au-delà de la durée choisie, le tarif libre s'applique.</p>
+            <p class="rates-demo-note" data-tarif="demo" hidden></p>
+          </div>
+          <div class="card rules-card">
+            <article><span class="rule-icon" aria-hidden="true">01</span><div><h2 data-i18n="oneCardTitle">Une carte par personne</h2><p data-i18n="oneCardText">Chaque conducteur utilise sa propre carte pour accéder au parking.</p></div></article>
+            <article><span class="rule-icon" aria-hidden="true">!</span><div><h2 data-i18n="lostCardTitle">Carte perdue ?</h2><p data-i18n="lostCardText">Contactez le gérant sur place pour bloquer la carte et protéger votre solde.</p></div></article>
+          </div>
+          <button class="button button-primary button-full" type="button" data-page-link="home" data-i18n="backHome">Retour à l'accueil</button>
+        </section>
+
+        <section class="page" id="page-code" aria-labelledby="code-title" hidden>
+          <button class="back-button" id="cancel-code" type="button" data-i18n="cancelCode">Annuler</button>
+          <span class="eyebrow" data-i18n="secureAccess">ACCÈS SÉCURISÉ</span>
+          <h1 id="code-title" data-i18n="enterCode">Entrez votre code</h1>
+          <p class="intro" data-i18n="codeIntro">Saisissez les six chiffres affichés sur l'écran du parking.</p>
+          <form id="login-form" class="card form-card">
+            <label for="code" data-i18n="temporaryCode">Code temporaire</label>
+            <input id="code" name="code" type="text" inputmode="numeric" autofocus autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" placeholder="••••••" required aria-describedby="code-help code-error">
+            <div class="code-meta">
+              <p class="field-help" id="code-help" data-i18n="codeExpiry">Saisissez-le avant la fin du compte à rebours de la barrière</p>
+              <p class="code-countdown-label"><span data-i18n="timeRemaining">Temps restant :</span> <strong id="code-countdown">00:25</strong></p>
+            </div>
+            <div class="code-progress-track" role="progressbar" aria-label="Temps restant pour saisir le code" aria-valuemin="0" aria-valuemax="25" aria-valuenow="25">
+              <span id="code-progress"></span>
+            </div>
+            <p class="message error-message" id="code-error" role="alert" hidden></p>
+            <!-- Bouton retiré, validation automatique à 6 chiffres -->
+          </form>
+          <button class="text-link center-link" type="button" data-page-link="help" data-i18n="needHelp">Besoin d'aide ?</button>
+          <div class="code-expiry-modal" id="code-expiry-modal" role="alertdialog" aria-modal="true" aria-labelledby="code-expiry-title" aria-describedby="code-expiry-message" hidden>
+            <div class="code-expiry-dialog">
+              <span class="code-expiry-icon" aria-hidden="true">!</span>
+              <h2 id="code-expiry-title" data-i18n="codeExpiredTitle">Temps écoulé</h2>
+              <p id="code-expiry-message" data-i18n="codeExpiredMessage">Le temps de saisie est écoulé. Veuillez repasser votre carte sur le lecteur du parking.</p>
+              <button class="button button-primary button-full" id="code-expiry-home" type="button" data-i18n="returnHome">Retour à l'accueil</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="page" id="page-welcome" aria-labelledby="welcome-title" role="region" tabindex="0" hidden>
+          <div class="welcome-card card">
+            <div class="welcome-check-container" aria-hidden="true">
+              <svg class="welcome-checkmark" viewBox="0 0 52 52">
+                <circle class="welcome-checkmark-circle" cx="26" cy="26" r="24" fill="none"/>
+                <path class="welcome-checkmark-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+              </svg>
+            </div>
+            <h1 id="welcome-title" class="welcome-title"><span data-i18n="welcome">Bienvenue</span> <span id="customer-name"></span></h1>
+            <div class="welcome-place-block">
+              <span class="welcome-place-label" data-i18n="yourPlaceLabel">Votre place</span>
+              <strong class="welcome-place-value" id="welcome-place">—</strong>
+            </div>
+            <div class="welcome-arrow-container" aria-hidden="true">
+              <svg class="welcome-arrow" viewBox="0 0 24 24" width="32" height="32">
+                <path d="M12 4v16m0 0l-6-6m6 6l6-6" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <div class="welcome-balance-block">
+              <span class="balance-label" data-i18n="balance">Votre solde</span>
+              <strong class="welcome-balance-value" id="welcome-balance">—</strong>
+            </div>
+            <p class="welcome-skip-hint" data-i18n="tapToSkip">Touchez pour continuer</p>
+          </div>
+          <p class="message error-message" id="welcome-error" role="alert" hidden></p>
+        </section>
+
+        <section class="page" id="page-plan" aria-labelledby="plan-title" hidden>
+          <span class="eyebrow" data-i18n="planEyebrow">VOTRE STATIONNEMENT</span>
+          <h1 id="plan-title" data-i18n="planChoiceTitle">Combien de temps restez-vous ?</h1>
+          <p class="intro" data-i18n="planChoiceIntro">Choisissez une durée pour payer moins. Vous pouvez partir avant ; au-delà, le tarif libre s'applique.</p>
+          <form id="plan-form">
+            <fieldset class="amount-options plan-options" id="plan-options" aria-labelledby="plan-title"></fieldset>
+            <div class="home-rates-block card plan-rates">
+              <div class="rates-block-rows">
+                <div class="rates-row"><span class="rates-role" data-i18n="ratePlanned">App · durée choisie</span><strong class="rates-price"><span data-tarif="planifie">—</span> <small data-i18n="perHour">DT / h</small></strong></div>
+                <div class="rates-row"><span class="rates-role" data-i18n="rateFree">App · temps libre</span><strong class="rates-price"><span data-tarif="libre">—</span> <small data-i18n="perHour">DT / h</small></strong></div>
+                <div class="rates-row"><span class="rates-role" data-i18n="rateNoApp">Sans application</span><strong class="rates-price"><span data-tarif="sansApp">—</span> <small data-tarif="sansAppBloc">DT / 30 min</small></strong></div>
+              </div>
+              <p class="rates-demo-note" data-tarif="demo" hidden></p>
+            </div>
+            <p class="message error-message" id="plan-error" role="alert" hidden></p>
+            <button class="button button-primary button-full" id="plan-button" type="submit" data-i18n="planConfirm">Valider →</button>
+          </form>
+        </section>
+
+        <section class="page" id="page-session" aria-labelledby="session-title" hidden>
+          <span class="eyebrow" data-i18n="liveSession">EN COURS</span>
+          <h1 id="session-title" data-i18n="sessionTitle">Votre session</h1>
+          <p class="intro" data-i18n="sessionIntro">Votre solde et votre temps restant sont actualisés en direct.</p>
+          <div class="low-balance-alert" id="low-balance-alert" role="status" hidden>
+            <span id="low-balance-message" data-i18n="lowBalance">Il vous reste moins de deux minutes de stationnement.</span>
+            <div class="low-balance-actions">
+              <button class="sheet-recharge" id="low-balance-recharge" type="button" data-i18n="rechargeNow">Recharger</button>
+            </div>
+          </div>
+          <section class="parking-plan card session-plan" id="session-plan" aria-label="Plan du parking">
+            <!-- Pastilles d'état session -->
+            <div class="plan-badges">
+              <span class="plan-badge" id="sbadge-map-status">
+                <span class="plan-badge-dot plan-badge-dot--yellow"></span>
+                <span id="sbadge-map-text">En attente des capteurs</span>
+              </span>
+              <span class="plan-badge" id="sbadge-barrier">
+                <span class="plan-badge-dot plan-badge-dot--red"></span>
+                <span id="sbadge-barrier-text">Barrière : Fermée</span>
+              </span>
+              <span class="plan-badge" id="sbadge-rain">
+                <span class="plan-badge-icon" id="sbadge-rain-icon">☀️</span>
+                <span id="sbadge-rain-text">Temps sec</span>
+              </span>
+            </div>
+
+            <!-- SVG Session -->
+            <svg class="parking-map parking-map--live" viewBox="0 0 360 290" role="img" aria-labelledby="session-plan-title session-plan-desc">
+              <title id="session-plan-title" data-i18n="planTitle">Plan du parking</title>
+              <desc id="session-plan-desc" data-i18n="planDescription">Vue de dessus des deux places de stationnement, la première couverte.</desc>
+              <defs>
+                <pattern id="s-hatch-roof" width="8" height="8" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
+                  <line x1="0" y1="0" x2="0" y2="8" stroke="rgba(56,189,248,0.22)" stroke-width="2"/>
+                </pattern>
+              </defs>
+
+              <rect class="lot-background" x="5" y="5" width="350" height="280" rx="16"/>
+              <text class="plan-title-text" x="180" y="24" text-anchor="middle" fill="#6b7280" font-size="7" font-weight="800" letter-spacing="2">PLAN DU PARKING</text>
+
+              <!-- Place 1 : COUVERTE -->
+              <g class="parking-spot" data-place="Place 1" data-state="free">
+                <rect x="14" y="32" width="162" height="130" rx="12" fill="url(#s-hatch-roof)" stroke="#38bdf8" stroke-width="2" stroke-dasharray="6 4" opacity="0.55"/>
+                <text class="spot-environment-label" x="95" y="46" text-anchor="middle" fill="#7dd3fc" font-size="7" font-weight="800" letter-spacing="0.6">COUVERTE</text>
+                <rect class="bay-fill" x="22" y="52" width="146" height="102" rx="11"/>
+                <text class="bay-number" x="95" y="105" text-anchor="middle" fill="rgba(255,255,255,0.08)" font-size="48" font-weight="900">1</text>
+                <g class="sensor-box" transform="translate(68,34)">
+                  <rect x="0" y="0" width="54" height="14" rx="4" fill="#0c4a6e" stroke="#38bdf8" stroke-width="0.8"/>
+                  <circle class="sensor-led" id="s-led-p1-l" cx="14" cy="7" r="4" fill="#56d79b"/>
+                  <circle class="sensor-led" id="s-led-p1-r" cx="40" cy="7" r="4" fill="#56d79b"/>
+                  <text x="27" y="22" text-anchor="middle" fill="#7dd3fc" font-size="5.5" font-weight="700">HC-SR04</text>
+                </g>
+                <g class="car" aria-hidden="true">
+                  <rect class="car-shadow" x="55" y="66" width="50" height="78" rx="15"/>
+                  <path class="car-body" d="M64 76q3-9 10-11h13q7 2 10 11l3 12v38l-3 11q-3 8-10 10H74q-7-2-10-10l-3-11V88z"/>
+                  <path class="car-window" d="M67 83q3-11 8-12h11q5 1 8 12v13H67zm0 20h27v17H67z"/>
+                  <path class="car-detail" d="M68 99h25m-26 30h7m14 0h7"/>
+                </g>
+                <text class="bay-label" x="95" y="147" data-i18n="placeOne">Place 1</text>
+                <text class="bay-state" x="95" y="159" data-i18n="free">Libre</text>
+              </g>
+
+              <!-- Place 2 : DÉCOUVERTE -->
+              <g class="parking-spot" data-place="Place 2" data-state="free">
+                <rect x="184" y="32" width="162" height="130" rx="12" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1.5" stroke-dasharray="4 5"/>
+                <text class="spot-environment-label" x="265" y="46" text-anchor="middle" fill="#a4abb6" font-size="7" font-weight="800" letter-spacing="0.6">EXTÉRIEURE</text>
+                <rect class="bay-fill" x="192" y="52" width="146" height="102" rx="11"/>
+                <text class="bay-number" x="265" y="105" text-anchor="middle" fill="rgba(255,255,255,0.08)" font-size="48" font-weight="900">2</text>
+                <g class="sensor-box" transform="translate(238,34)">
+                  <rect x="0" y="0" width="54" height="14" rx="4" fill="#1e293b" stroke="#64748b" stroke-width="0.8"/>
+                  <circle cx="18" cy="7" r="4" fill="#334155" stroke="#94a3b8" stroke-width="0.8"/>
+                  <circle class="sensor-led" id="s-led-p2" cx="38" cy="7" r="4" fill="#56d79b"/>
+                  <text x="27" y="22" text-anchor="middle" fill="#94a3b8" font-size="5.5" font-weight="700">HC-SR04</text>
+                </g>
+                <rect class="rain-overlay" id="s-rain-overlay-p2" x="192" y="52" width="146" height="102" rx="11" fill="url(#rain-drop)" style="display:none"/>
+                <g class="car" aria-hidden="true">
+                  <rect class="car-shadow" x="225" y="66" width="50" height="78" rx="15"/>
+                  <path class="car-body" d="M234 76q3-9 10-11h13q7 2 10 11l3 12v38l-3 11q-3 8-10 10h-13q-7-2-10-10l-3-11V88z"/>
+                  <path class="car-window" d="M237 83q3-11 8-12h11q5 1 8 12v13h-27zm0 20h27v17h-27z"/>
+                  <path class="car-detail" d="M238 99h25m-26 30h7m14 0h7"/>
+                </g>
+                <text class="bay-label" x="265" y="147" data-i18n="placeTwo">Place 2</text>
+                <text class="bay-state" x="265" y="159" data-i18n="free">Libre</text>
+              </g>
+
+              <!-- Voie et Barrière -->
+              <rect x="14" y="200" width="332" height="36" rx="8" fill="#0f1318"/>
+              <line x1="30" y1="218" x2="330" y2="218" stroke="rgba(255,255,255,0.12)" stroke-width="1.5" stroke-dasharray="10 8"/>
+              <polygon points="310,212 322,218 310,224" fill="#6b7280" opacity="0.6"/>
+              <text x="180" y="248" text-anchor="middle" fill="#6b7280" font-size="7" font-weight="800" letter-spacing="1.5">ENTRÉE</text>
+
+              <g transform="translate(22,190)">
+                <rect x="0" y="0" width="36" height="44" rx="6" fill="#1f2530" stroke="#485363" stroke-width="1"/>
+                <rect x="5" y="6" width="26" height="18" rx="3" fill="#13171e" stroke="#2c3442" stroke-width="0.7"/>
+                <circle id="s-led-rc522" cx="18" cy="33" r="3" fill="#56d79b"/>
+                <text x="18" y="51" text-anchor="middle" fill="#a4abb6" font-size="6" font-weight="700">RC522</text>
+              </g>
+
+              <g transform="translate(76,192)">
+                <rect x="0" y="0" width="30" height="36" rx="5" fill="#183654" stroke="#2a5885" stroke-width="1"/>
+                <circle cx="15" cy="10" r="4" fill="#0d1f30" stroke="#427aa1" stroke-width="0.7"/>
+                <text x="15" y="28" text-anchor="middle" fill="#7ab2df" font-size="5.5" font-weight="800">SG90</text>
+                <circle id="s-led-barrier" cx="15" cy="10" r="2.5" fill="#ef4444"/>
+                <g id="s-barrier-arm-group" style="transform-origin:15px 10px;transition:transform 0.6s ease">
+                  <line x1="15" y1="10" x2="70" y2="10" stroke="#ef4444" stroke-width="3.5" stroke-linecap="round" stroke-dasharray="6 4"/>
+                  <circle cx="15" cy="10" r="3" fill="#ffc94c"/>
+                </g>
+              </g>
+            </svg>
+
+            <div class="plan-legend" aria-label="Légende">
+              <span><i class="legend-dot legend-free"></i><span data-i18n="free">Libre</span></span>
+              <span><i class="legend-dot legend-occupied"></i><span data-i18n="occupied">Occupée</span></span>
+              <span><i class="legend-dot legend-yours"></i><span data-i18n="yours">Ma place</span></span>
+            </div>
+          </section>
+          <section class="session-sheet card" aria-label="Résumé de la session">
+            <div class="session-sheet-top"><strong id="assigned-place">—</strong><span><span data-i18n="entryTime">Entrée</span> <b id="entry-time">—</b></span></div>
+            <div class="session-plan-line"><span id="session-plan-label">—</span><strong><span data-i18n="costSoFar">Coût actuel</span> <b id="session-cost">—</b></strong></div>
+            <div class="session-sheet-stats"><div><small id="time-remaining-label" data-i18n="remainingTime">Temps restant estimé</small><strong id="time-remaining">—</strong></div><div class="sheet-balance"><small data-i18n="estimatedBalance">Solde estimé</small><strong id="session-balance">—</strong></div></div>
+            <div class="progress-label"><span data-i18n="creditRemaining">Crédit restant</span><span id="balance-percent">100%</span></div>
+            <div class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100"><span id="balance-progress"></span></div>
+            <button class="sheet-recharge" id="open-recharge" type="button" data-i18n="recharge">＋ Recharger mon solde</button>
+          </section>
+          <div class="exit-instruction-card card" id="exit-instruction-banner">
+            <span class="exit-card-icon" aria-hidden="true">💳</span>
+            <span class="exit-instruction-text" data-i18n="exitInstruction">Pour sortir, tapez votre carte sur le lecteur</span>
+          </div>
+          <button class="button button-primary button-full quit-button" id="quit-parking" type="button" data-i18n="quitParking">Quitter le parking</button>
+          <p class="message error-message" id="session-error" role="alert" hidden></p>
+        </section>
+
+        <section class="page" id="page-recharge" aria-labelledby="recharge-title" hidden>
+          <button class="back-button" id="back-to-session" type="button"><span aria-hidden="true">←</span><span data-i18n="back">Retour</span></button>
+          <span class="eyebrow" data-i18n="credit">CRÉDIT PARKING</span><h1 id="recharge-title" data-i18n="rechargeTitle">Recharger mon solde</h1><p class="intro" data-i18n="rechargeIntro">Choisissez le montant à ajouter à votre crédit.</p>
+          <div class="card recharge-balance-card">
+            <span class="recharge-summary-label" data-i18n="currentBalance">Solde actuel estimé</span>
+            <strong id="recharge-current-balance">—</strong>
+          </div>
+          <form id="recharge-form">
+            <fieldset class="amount-options">
+              <legend class="visually-hidden" data-i18n="amount">Montant</legend>
+              <label class="amount-option"><input type="radio" name="montant" value="5"><span class="amount-card"><strong>5 DT</strong><small data-i18n="topUpAmount">Ajouter au solde</small></span></label>
+              <label class="amount-option"><input type="radio" name="montant" value="10" checked><span class="amount-card"><strong>10 DT</strong><small data-i18n="topUpAmount">Ajouter au solde</small></span></label>
+              <label class="amount-option"><input type="radio" name="montant" value="20"><span class="amount-card"><strong>20 DT</strong><small data-i18n="topUpAmount">Ajouter au solde</small></span></label>
+            </fieldset>
+            <div class="card recharge-summary" aria-live="polite">
+              <div class="recharge-summary-row"><span data-i18n="rechargeAmount">Montant à ajouter</span><strong id="recharge-amount-preview">10,00 DT</strong></div>
+              <div class="recharge-summary-row recharge-summary-total"><span data-i18n="newBalance">Nouveau solde estimé</span><strong id="recharge-new-balance">—</strong></div>
+            </div>
+            <p class="recharge-simulation-note" data-i18n="paymentSimulation">Simulation de paiement : aucun paiement réel n'est effectué.</p>
+            <p class="message error-message" id="recharge-error" role="alert" hidden></p>
+            <button class="button button-primary button-full" id="pay-button" type="submit"><span data-i18n="confirmRecharge">Confirmer la recharge</span><span id="selected-amount">10 DT</span></button>
+          </form>
+        </section>
+
+        <section class="page" id="page-finish" aria-labelledby="finish-title" hidden>
+          <div class="finish-mark" aria-hidden="true">✓</div><span class="eyebrow" data-i18n="sessionComplete">SESSION TERMINÉE</span><h1 id="finish-title"><span data-i18n="thankYou">Merci</span> <span id="finish-name"></span></h1><p class="intro" data-i18n="finishIntro">Voici le récapitulatif de votre stationnement.</p>
+          <div class="card receipt-card"><div class="receipt-heading"><span data-i18n="receipt">REÇU DE STATIONNEMENT</span><strong id="receipt-date">—</strong></div><div class="receipt-row"><span data-i18n="assignedPlaceLabel">Place</span><strong id="finish-place">—</strong></div><div class="receipt-row"><span data-i18n="entryDate">Date d'entrée</span><strong id="finish-entry-date">—</strong></div><div class="receipt-row"><span data-i18n="exitDate">Date de sortie</span><strong id="finish-exit-date">—</strong></div><div class="receipt-row"><span data-i18n="planReceipt">Formule</span><strong id="finish-plan">—</strong></div><div class="receipt-row"><span data-i18n="duration">Durée</span><strong id="finish-duration">—</strong></div><div class="receipt-row"><span data-i18n="priceDebited">Prix débité</span><strong id="finish-price">—</strong></div><div class="receipt-divider"></div><div class="receipt-row receipt-total"><span data-i18n="finalBalance">Solde final</span><strong id="finish-balance">—</strong></div></div>
+          <p class="message info-message" id="finish-gate-note" role="status" hidden></p>
+          <p class="receipt-auto-home" id="finish-home-countdown" role="status" aria-live="polite">Retour automatique à l'accueil dans 30s...</p>
+          <button class="button button-primary button-full" id="new-session" type="button" data-i18n="backHome">Retour à l'accueil</button>
+        </section>
+
+        <section class="page offline-page" id="page-offline" aria-labelledby="offline-title" hidden>
+          <div class="offline-symbol" aria-hidden="true">!</div><span class="eyebrow" data-i18n="connectionIssue">CONNEXION</span><h1 id="offline-title">ESP32 injoignable</h1><p class="intro" data-i18n="offlineText">Vérifiez votre connexion au Wi-Fi du parking et réessayez.</p><button class="button button-primary button-full" id="retry-button" type="button" data-i18n="retry">Réessayer</button><button class="text-link center-link" type="button" data-page-link="home" data-i18n="backHome">Retour à l'accueil</button>
+        </section>
+      </div>
+      <div class="code-expiry-modal" id="session-idle-modal" role="alertdialog" aria-modal="true" aria-labelledby="session-idle-title" aria-describedby="session-idle-message" hidden>
+        <div class="code-expiry-dialog">
+          <span class="code-expiry-icon" aria-hidden="true">!</span>
+          <h2 id="session-idle-title" data-i18n="inactivityTitle">Session inactive</h2>
+          <p id="session-idle-message"><span data-i18n="inactivityWarning">Session inactive. Déconnexion dans</span> <strong id="session-idle-countdown">15</strong> <span data-i18n="secondsUnit">secondes...</span></p>
+          <button class="button button-primary button-full" id="stay-connected" type="button" data-i18n="stayConnected">Rester connecté</button>
+        </div>
+      </div>
+      <nav class="bottom-nav" aria-label="Navigation principale">
+        <button class="nav-item is-active" type="button" data-page-link="home"><span class="nav-icon" aria-hidden="true">⌂</span><span data-i18n="navHome">Accueil</span></button>
+        <button class="nav-item" type="button" data-page-link="session"><span class="nav-icon" aria-hidden="true">◷</span><span data-i18n="navSession">Session</span></button>
+        <button class="nav-item" type="button" data-page-link="help"><span class="nav-icon" aria-hidden="true">?</span><span data-i18n="navHelp">Aide</span></button>
+      </nav>
+      <footer class="app-footer"><a href="/qr.html">Wi-Fi</a></footer>
+    </main>
+  </body>
+</html>

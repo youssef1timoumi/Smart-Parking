@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0E1B2E">
+<title>Smart Parking</title>
+<style>
+  :root { --bg:#0E1B2E; --card:#16263D; --line:#2A3C57; --ink:#E7EEF7; --muted:#9FB2CC; --accent:#3B7DFF; --green:#15B5A0; --red:#ff6b6b; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:system-ui,-apple-system,"Segoe UI",sans-serif; background:var(--bg); color:var(--ink);
+         min-height:100vh; display:flex; flex-direction:column; align-items:center; padding:28px 18px 40px; }
+  .brand { display:flex; align-items:center; gap:10px; font-size:22px; font-weight:700; margin-bottom:28px; }
+  .dot { width:30px;height:30px;border-radius:9px;background:var(--accent);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800; }
+  .card { width:100%; max-width:420px; background:var(--card); border:1px solid var(--line); border-radius:18px; padding:26px 22px; }
+  h1 { font-size:24px; margin:0 0 6px; }
+  p.sub { color:var(--muted); margin:0 0 22px; font-size:15px; line-height:1.4; }
+  label { display:block; color:var(--muted); font-size:13px; margin-bottom:8px; text-transform:uppercase; letter-spacing:1px; }
+  input { width:100%; padding:16px; font-size:30px; letter-spacing:10px; text-align:center; border-radius:12px;
+          border:1px solid var(--line); background:#0c1a2c; color:var(--ink); font-family:ui-monospace,monospace; }
+  button { width:100%; margin-top:18px; padding:16px; font-size:17px; font-weight:600; border:0; border-radius:12px;
+           background:var(--accent); color:#fff; cursor:pointer; }
+  button:disabled { opacity:.55; }
+  .err { color:var(--red); font-size:14px; margin-top:12px; min-height:18px; text-align:center; }
+  .hidden { display:none; }
+  .row { display:flex; justify-content:space-between; align-items:center; padding:16px 0; border-bottom:1px solid var(--line); }
+  .row:last-child { border-bottom:0; }
+  .row .k { color:var(--muted); font-size:15px; }
+  .row .v { font-size:20px; font-weight:600; }
+  .big { font-size:40px; font-weight:700; margin:4px 0 2px; }
+  .status-pill { display:inline-flex; align-items:center; gap:8px; padding:8px 14px; border-radius:999px; font-size:15px; font-weight:600; margin:6px 0 18px; }
+  .parked { background:rgba(21,181,160,.15); color:var(--green); }
+  .waiting { background:rgba(255,200,80,.15); color:#ffc850; }
+  .footnote { color:var(--muted); font-size:13px; text-align:center; margin-top:16px; }
+</style>
+</head>
+<body>
+  <div class="brand"><span class="dot">P</span> Smart Parking</div>
+
+  <!-- Screen 1: enter code -->
+  <section id="screen-code" class="card">
+    <h1>Enter your code</h1>
+    <p class="sub">Type the 6-digit code shown on the gate screen when you tapped your card.</p>
+    <label for="code">Access code</label>
+    <input id="code" type="text" inputmode="numeric" maxlength="6" pattern="[0-9]*" placeholder="••••••" autocomplete="one-time-code">
+    <button id="connect">Connect</button>
+    <div class="err" id="code-err"></div>
+  </section>
+
+  <!-- Screen 2: live session -->
+  <section id="screen-session" class="card hidden">
+    <h1 id="hello">Welcome</h1>
+    <div id="pill" class="status-pill waiting">Waiting for your car…</div>
+    <div class="row"><span class="k">Time parked</span><span class="v" id="elapsed">—</span></div>
+    <div class="row"><span class="k">Cost so far</span><span class="v" id="cost">—</span></div>
+    <div class="row"><span class="k">Rate</span><span class="v" id="rate">—</span></div>
+    <p class="footnote">Leave whenever you like — tap your card at the gate to exit. The cost is final at exit.</p>
+  </section>
+
+  <!-- Screen 3: ended -->
+  <section id="screen-ended" class="card hidden" style="text-align:center">
+    <div class="big" style="color:var(--green)">✓</div>
+    <h1>Session ended</h1>
+    <p class="sub" style="margin-bottom:0">Thanks for using Smart Parking. Drive safe!</p>
+  </section>
+
+<script>
+  const $ = (id) => document.getElementById(id);
+  let code = '', poll = null, wasActive = false;
+
+  function show(which) {
+    for (const s of ['screen-code', 'screen-session', 'screen-ended']) $(s).classList.toggle('hidden', s !== which);
+  }
+  function fmt(sec) {
+    const m = Math.floor(sec / 60), s = sec % 60;
+    return m > 0 ? `${m}m ${String(s).padStart(2, '0')}s` : `${s}s`;
+  }
+
+  async function connect() {
+    code = $('code').value.trim();
+    $('code-err').textContent = '';
+    if (!/^\d{6}$/.test(code)) { $('code-err').textContent = 'Enter the 6 digits from the gate screen.'; return; }
+    $('connect').disabled = true;
+    try {
+      const r = await fetch('/api/gate/claim', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code }) });
+      if (!r.ok) { $('code-err').textContent = 'Code not found or expired. Check the gate screen.'; $('connect').disabled = false; return; }
+      show('screen-session');
+      startPoll();
+    } catch {
+      $('code-err').textContent = 'Network error. Try again.';
+      $('connect').disabled = false;
+    }
+  }
+
+  function startPoll() {
+    const tick = async () => {
+      try {
+        const r = await fetch('/api/gate-session?code=' + code, { cache: 'no-store' });
+        const d = await r.json();
+        if (d.found) {
+          wasActive = true;
+          $('hello').textContent = 'Welcome ' + (d.owner || '');
+          const pill = $('pill');
+          if (d.parked) { pill.className = 'status-pill parked'; pill.textContent = '● Your car is parked'; }
+          else { pill.className = 'status-pill waiting'; pill.textContent = '● Waiting for your car…'; }
+          $('elapsed').textContent = fmt(d.elapsedSec);
+          $('cost').textContent = Number(d.runningCost).toFixed(2) + ' TND';
+          $('rate').textContent = d.perBlock + ' TND / ' + d.blockSec + 's';
+        } else if (wasActive) {
+          clearInterval(poll);
+          show('screen-ended');
+        }
+      } catch {}
+    };
+    tick();
+    poll = setInterval(tick, 2000);
+  }
+
+  $('connect').addEventListener('click', connect);
+  $('code').addEventListener('keydown', (e) => { if (e.key === 'Enter') connect(); });
+</script>
+</body>
+</html>

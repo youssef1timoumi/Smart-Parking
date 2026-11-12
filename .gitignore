@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+
+# Runtime data (SQLite DB, JSON stores written at runtime)
+backend/data/
+*.db
+*.db-*
+
+# Local secrets / launch scripts
+.env
+*.local.*
+mobile/start.ps1
+
+# OS / editor
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+
+# Arduino build output
+build/
+*.bin
+*.elf

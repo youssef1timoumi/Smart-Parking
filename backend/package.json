@@ -1,0 +1,22 @@
+{
+  "name": "smart-parking-backend",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Smart Parking RFID backend - source of truth (Express + SQLite)",
+  "main": "server.js",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test test/api.test.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.6",
+    "express": "^4.21.0"
+  },
+  "optionalDependencies": {
+    "better-sqlite3": "^11.7.0"
+  }
+}
